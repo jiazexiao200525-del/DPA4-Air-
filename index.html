@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DPA4-Air 闭环执行手册 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="DPA4-Air 闭环执行手册 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="index">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="index.html" class="on"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="pages/spec.html"><span class="n">00</span>算例规格</a><a href="pages/protocol.html"><span class="n">P</span>四条口径</a><a href="pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="pages/gates.html"><span class="n">G</span>决策门</a><a href="pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>概览</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">DPA4-Air 闭环执行手册</span>
+    </nav>
+
+
+
+    <div class="prose">
+
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Machine-Learning Potential · Closed Loop</p>
+    <h1>每一步怎么做，<br>做到什么才进<em>下一步</em>。</h1>
+    <p class="lede">
+      把「DPA4-Air 预优化 → 选帧 → ABACUS 单点打标签 → LoRA 微调 → DFT 受力验收」
+      拆成可逐项执行的目录、命令、判据与回退条件，共 00–08 十步 + 03B 主动学习采样、五道决策门。
+    </p>
+    <div class="hero-actions">
+      <a class="btn primary" href="pages/spec.html">从算例规格开始 <span aria-hidden="true">→</span></a>
+      <a class="btn ghost" href="pages/step-00.html">直接进 00 步</a>
+    </div>
+  </div>
+  
+<figure class="loopfig">
+<svg viewBox="0 0 400 400" role="img" aria-labelledby="loop-title loop-desc">
+  <title id="loop-title">闭环示意图</title>
+  <desc id="loop-desc">预检、采样、选帧、标签、微调、验收六个环节首尾相接，构成一个闭环；其中“选帧”在第二轮起由分会不确定度决定。</desc>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8ba7c7"/>
+    </marker>
+  </defs>
+  <g class="loop-arrows" fill="none" stroke="#8ba7c7" stroke-width="1.6" marker-end="url(#ar)">
+    <path d="M232 106 A 110 110 0 0 1 286 154"/>
+    <path d="M300 186 A 110 110 0 0 1 286 246"/>
+    <path d="M262 290 A 110 110 0 0 1 200 310"/>
+    <path d="M138 290 A 110 110 0 0 1 114 246"/>
+    <path d="M100 186 A 110 110 0 0 1 114 154"/>
+    <path d="M168 106 A 110 110 0 0 1 200 90"/>
+  </g>
+  <g class="loop-core">
+    <circle cx="200" cy="200" r="62"/>
+    <text class="t1" x="200" y="193" text-anchor="middle">DPA4-Air</text>
+    <text class="t2" x="200" y="214" text-anchor="middle">+ ABACUS</text>
+  </g>
+  <g class="loop-node">
+    <circle cx="200" cy="90" r="27"/><text x="200" y="95" text-anchor="middle">预检</text>
+    <circle cx="295" cy="145" r="27"/><text x="295" y="150" text-anchor="middle">采样</text>
+    <circle cx="295" cy="255" r="27"/><text x="295" y="260" text-anchor="middle">选帧</text>
+    <circle cx="200" cy="310" r="27"/><text x="200" y="315" text-anchor="middle">标签</text>
+    <circle cx="105" cy="255" r="27"/><text x="105" y="260" text-anchor="middle">微调</text>
+    <circle cx="105" cy="145" r="27"/><text x="105" y="150" text-anchor="middle">验收</text>
+  </g>
+</svg>
+<figcaption>六个环节首尾相接。任何一门不通过，就停在当前阶段，不往下推。“选帧”有两个执行体：首轮用 03 的事件驱动，第二轮起用 03B 的分会不确定度。</figcaption>
+</figure>
+
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="v">12</div><div class="k">原子 / 全可动<br>周期双界面</div></div>
+  <div class="stat b"><div class="v">6–10</div><div class="k">每轮新增<br>DFT 候选帧</div></div>
+  <div class="stat t"><div class="v">≤0.05</div><div class="k">最终最大受力<br>eV/Å</div></div>
+  <div class="stat"><div class="v">3</div><div class="k">LoRA 种子模型<br>做分会</div></div>
+</div>
+
+<div class="callout">
+  <h2>这个站交付的是“仪器”，不是“零件”</h2>
+  <p>
+    12 原子 Σ3 晶界跑完，你得到的不是一篇论文里的界面结构，而是一套
+    <b>已验证、误差已知</b>的工具链：每帧标签的真实价格、SCF 阈值到力误差的传递关系、
+    DPA4-Air 在这个体系上的固有偏差。有了这三个数，才能给大体系报价并判断可行性。
+  </p>
+  <a class="text-link" href="pages/deliverables.html">看完整交付物与适用边界 <span aria-hidden="true">→</span></a>
+</div>
+
+<section class="group"><div class="group-hd"><h2>预备</h2><span>3 页</span></div><div class="tiles"><a class="tile" href="pages/spec.html"><span class="tile-n">00</span><span class="tile-t">算例规格</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/protocol.html"><span class="tile-n">P</span><span class="tile-t">四条口径</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/calibration.html"><span class="tile-n">C</span><span class="tile-t">标签精度标定</span><span class="tile-a" aria-hidden="true">↗</span></a></div></section><section class="group"><div class="group-hd"><h2>执行</h2><span>11 页</span></div><div class="tiles"><a class="tile" href="pages/step-00.html"><span class="tile-n">00</span><span class="tile-t">建立运行目录</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-01.html"><span class="tile-n">01</span><span class="tile-t">DPA4-Air 单帧预检</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-02.html"><span class="tile-n">02</span><span class="tile-t">受控 ML 预优化</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-03.html"><span class="tile-n">03</span><span class="tile-t">选出 DFT 候选帧</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-03b.html"><span class="tile-n">03B</span><span class="tile-t">主动学习采样</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-04.html"><span class="tile-n">04</span><span class="tile-t">DFT 单点标签</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-05.html"><span class="tile-n">05</span><span class="tile-t">数据集划分</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-05b.html"><span class="tile-n">05B</span><span class="tile-t">LoRA 微调与采纳门</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-06.html"><span class="tile-n">06</span><span class="tile-t">再优化与多候选</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-07.html"><span class="tile-n">07</span><span class="tile-t">DFT 受力验收</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/step-08.html"><span class="tile-n">08</span><span class="tile-t">晶界能 γ_GB</span><span class="tile-a" aria-hidden="true">↗</span></a></div></section><section class="group"><div class="group-hd"><h2>收束</h2><span>4 页</span></div><div class="tiles"><a class="tile" href="pages/gates.html"><span class="tile-n">G</span><span class="tile-t">决策门</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/deliverables.html"><span class="tile-n">D</span><span class="tile-t">交付物与边界</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/checklist.html"><span class="tile-n">✓</span><span class="tile-t">执行清单</span><span class="tile-a" aria-hidden="true">↗</span></a><a class="tile" href="pages/glossary.html"><span class="tile-n">?</span><span class="tile-t">口径备忘</span><span class="tile-a" aria-hidden="true">↗</span></a></div></section>
+
+<footer class="home-foot">
+  <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+  <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+</footer>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <span class="pager-prev empty"></span>
+      <a class="pager-next" href="pages/spec.html"><span class="pk">下一页</span><span class="pt">算例规格</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

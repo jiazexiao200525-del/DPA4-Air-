@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>页面不存在 · 正在返回首页</title>
+<meta http-equiv="refresh" content="1; url=./">
+<script>
+/* 适配项目站点（/<仓库>/...）与用户站点：只保留第一段路径后回到根 */
+(function () {
+  var seg = location.pathname.split("/").filter(Boolean);
+  var root = location.origin + "/" + (seg.length ? seg[0] + "/" : "");
+  setTimeout(function () { location.replace(root); }, 400);
+})();
+</script>
+<style>
+  html,body{height:100%;margin:0;display:grid;place-items:center;background:#f7f9fc;
+            color:#0f2337;font:15px/1.7 "DengXian","Microsoft YaHei",sans-serif;text-align:center}
+  code{font-family:Consolas,monospace;color:#556d84}
+  a{color:#1f56c4}
+</style>
+</head>
+<body>
+  <div>
+    <p>这个地址没有对应页面，正在返回首页……</p>
+    <p><a href="./">手动返回</a> ｜ <code class="p"></code></p>
+  </div>
+  <script>document.querySelector(".p").textContent = location.pathname;</script>
+</body>
+</html>
