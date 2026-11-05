@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>口径备忘 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="口径备忘 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="glossary">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html" class="on"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>收束</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">口径备忘</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">REFERENCE</p>
+      <h1>口径备忘</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">这几个词在整站里都有严格含义，不要混用。混用它们，往往是数值没错、结论错。</p>
+<dl class="gl"><div class="gl-i"><dt>主动学习 ≠ 微调</dt><dd>主动学习是采样策略（决定去算哪些 DFT）；微调是更新策略（拿到标签怎么改模型）。二者正交，标准做法是把微调放进每一轮闭环内部。</dd></div><div class="gl-i"><dt>收敛 ≠ 程序结束</dt><dd>「程序正常结束、步数用尽」不等于 SCF 收敛。判据是最后一次 DRHO 达标，不是退出码。</dd></div><div class="gl-i"><dt>冻结 ≠ 必需</dt><dd>冻结原子是为了在大体系里省自由度换机时、并给真空 slab 一个体相锚点。小周期体系全弛豫的代价更低，冻结只会凭空删掉自由度并把人为应变算进结果。</dd></div><div class="gl-i"><dt>可动 ≠ 固定</dt><dd>一旦设了约束，ABACUS 的最大受力判据只统计可动原子；固定层带建模代价，其反力单独报告，不参与判据。用全原子最大值当判据会高估偏离倍数。</dd></div><div class="gl-i"><dt>力偏差分区</dt><dd>会做分会时，模型间力标准差低表示已学会；中段表示有信息量，值得送 DFT；高段表示模型失效，先诊断再标注。</dd></div><div class="gl-i"><dt>低分歧 ≠ 准确</dt><dd>多个模型可能共享同一套训练偏差一起错。分歧只能用来挑哪些帧去算 DFT，不能代替 DFT 下结论。</dd></div><div class="gl-i"><dt>float32 的边界</dt><dd>力与几何优化到 0.05 eV/Å 用 float32 可接受（噪声约 1e-3 eV/Å）；但候选帧能量排序、误差表、分支能量比较必须 float64。</dd></div><div class="gl-i"><dt>参考态纪律</dt><dd>任何差值量（晶界能、黏附功、分离功）都要求两端同泛函、同截断、同 k 点、同赝势轨道。参考未收敛时，只允许“参考偏差完全相同”的组内比较。</dd></div></dl>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../pages/checklist.html"><span class="pk">上一页</span><span class="pt">执行清单</span></a>
+      <span class="pager-next empty"></span>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

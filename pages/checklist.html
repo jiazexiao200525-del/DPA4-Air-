@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>执行清单 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="执行清单 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="checklist">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html" class="on"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>收束</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">执行清单</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">EXECUTION CHECK</p>
+      <h1>执行清单</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">状态保存在浏览器本地，跨页互通，适合按轮次记录。左侧导航底部会同步显示进度。</p>
+<div class="cbar">
+  <span><b id="cnt">0</b> / 20</span>
+  <div class="prog"><i id="bar"></i></div>
+  <button class="creset" type="button" id="reset">清空</button>
+</div>
+<ul class="check" id="checks"><li><input type="checkbox" id="c1"><label for="c1"><span class="w">00</span>建立独立运行目录：manifest、结构副本、DPA4-Air checkpoint SHA-256 齐全。</label></li><li><input type="checkbox" id="c2"><label for="c2"><span class="w">00</span>确认无需冻结：12 个原子 move 全为 1，manifest 记录 movable 12 / fixed 0。</label></li><li><input type="checkbox" id="c3"><label for="c3"><span class="w">P</span>协议与精度核对：色散口径、checkpoint provenance 与 dtype、文件往返精度。</label></li><li><input type="checkbox" id="c4"><label for="c4"><span class="w">01</span>DPA4-Air 单帧预检通过：能量、力、type_map 映射、单位、原子顺序。</label></li><li><input type="checkbox" id="c5"><label for="c5"><span class="w">C</span>标签精度标定完成：2 帧 × 1e-4/1e-5/1e-6，比原子力 MAE/RMSE，锁定生产阈值。</label></li><li><input type="checkbox" id="c6"><label for="c6"><span class="w">02</span>完成 10–20 步受控 ML 短轨迹，轨迹可恢复、无明显几何坍塌。</label></li><li><input type="checkbox" id="c7"><label for="c7"><span class="w">02B</span>造出主动学习候选池：≥ 500 帧，多温度 / 多起点 / 多应变，逐帧带 cell/coord/species。</label></li><li><input type="checkbox" id="c8"><label for="c8"><span class="w">03</span>完成轨迹事件审计：键长、配位、位移和异常帧已记录。</label></li><li><input type="checkbox" id="c9"><label for="c9"><span class="w">03</span>选出 6–10 个首轮 DFT 帧，每帧有理由且相邻帧已去重。</label></li><li><input type="checkbox" id="c10"><label for="c10"><span class="w">03B</span>组好 3 成员分会（仅 training.seed 不同），各成员均通过 05B 采纳门。</label></li><li><input type="checkbox" id="c11"><label for="c11"><span class="w">03B</span>完成逐帧 σ_F 打分与多样性选帧：阈值分区正确、配额与分箱约束满足。</label></li><li><input type="checkbox" id="c12"><label for="c12"><span class="w">03B</span>闭环收敛判据已判定（连续两轮 σ_max < 0.01，或 07 通过，或 MAE 进入平台期）。</label></li><li><input type="checkbox" id="c13"><label for="c13"><span class="w">04</span>完成 DFT 单点标签：SCF 收敛、能量/力有限、映射可靠。</label></li><li><input type="checkbox" id="c14"><label for="c14"><span class="w">05</span>完成训练/验证划分，没有轨迹相邻帧泄漏。</label></li><li><input type="checkbox" id="c15"><label for="c15"><span class="w">05B</span>完成 LoRA 微调与采纳门：验证误差有改善才采纳，旧 checkpoint 保留。</label></li><li><input type="checkbox" id="c16"><label for="c16"><span class="w">06</span>完成三成员分会力偏差评估：低/中/高档位已分，候选按分歧而非单一能量挑选。</label></li><li><input type="checkbox" id="c17"><label for="c17"><span class="w">06</span>通过分会门：3 成员台账 + 逐帧 σ + al_rounds.csv 齐备，送/不送新帧有书面理由。</label></li><li><input type="checkbox" id="c18"><label for="c18"><span class="w">07</span>完成 DFT 受力验收：全部 12 原子最大受力分量 ≤ 0.05 eV/Å。</label></li><li><input type="checkbox" id="c19"><label for="c19"><span class="w">08</span>完成晶界能计算：γ_GB 与 bulk 参考同口径，四个原始量齐全。</label></li><li><input type="checkbox" id="c20"><label for="c20"><span class="w">08</span>al_rounds.csv 记录逐轮主线：池大小、送 DFT 帧数、花费、留出力 MAE、07 结论。</label></li></ul>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../pages/deliverables.html"><span class="pk">上一页</span><span class="pt">交付物与边界</span></a>
+      <a class="pager-next" href="../pages/glossary.html"><span class="pk">下一页</span><span class="pt">口径备忘</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

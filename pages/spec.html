@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>算例规格 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="算例规格 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="spec">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html" class="on"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>预备</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">算例规格</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">STEP 00 · SPEC</p>
+      <h1>算例规格</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">先把对象钉死。下面每个数字都来自实际结构文件，01 步的预检就是逐项核对这些值。任何一项与你的实际文件不一致，先改这里，再往下走。</p>
+
+<div class="tablewrap"><table class="grid kv"><caption>LiF Σ3 (111) 对称倾斜晶界 · 周期双界面模型</caption><tbody><tr><th scope="row">结构来源</th><td>grainLiF / symmetric tilt / 3.111.111</td></tr><tr><th scope="row">原子组成</th><td>6 Li + 6 F = 12；<b>全部可动</b>，<code>fixed = 0</code></td></tr><tr><th scope="row">坐标模式</th><td>Cartesian（单位 = LATTICE_CONSTANT 1.8897261 Bohr，即 Å）</td></tr><tr><th scope="row">a₁ / a₂</th><td>(2.887419, 0, 0) / (−1.4437095, 2.5005782, 0) Å</td></tr><tr><th scope="row">a₃（法向）</th><td>(0, 0, 14.145406) Å</td></tr><tr><th scope="row">界面面积 A</th><td>7.2202 Å²　→　双界面有效面积 2A = 14.4404 Å²</td></tr><tr><th scope="row">界面间距</th><td>≈ 7.07 Å（两个界面之间）</td></tr><tr><th scope="row">赝势</th><td>Li_ONCV_PBE-1.0.upf　F_ONCV_PBE-1.0.upf</td></tr><tr><th scope="row">轨道</th><td>Li_gga_8au_100Ry_4s1p.orb<br>F_gga_8au_150.0Ry_2s2p1d.orb</td></tr><tr><th scope="row">目标 DFT</th><td>ABACUS LCAO · PBE · ecutwfc 100.0 Ry · scf_thr 1e-6 · scf_nmax 200<br>kspacing 0.15 · gamma_only 0 · vdw d3_0 · nspin 1 · 无 U</td></tr><tr><th scope="row">验收判据</th><td>全部 12 原子最大受力分量 ≤ 0.05 eV/Å</td></tr></tbody></table></div>
+
+<h2>DPA4-Air checkpoint（双版本并列）</h2>
+<p>本算例同时持有两版 checkpoint。<b>实测执行以 v20260911 为 active</b>，v20260805 保留为 handbook_reference：
+手册原文的所有数字（大小、SHA）指向后者，照抄会与你实际拿到的文件不一致，所以两个都要记。</p>
+<div class="tablewrap"><table class="grid"><caption>两版并存；台账 checkpoint_hash.txt 里分别记 active / handbook_reference</caption><thead><tr><th>角色</th><th>文件名</th><th>字节</th><th>SHA-256（前 24 位）</th><th>用途</th></tr></thead><tbody><tr><td><b>active</b></td><td><code>DPA4-Air-OMat24-v20260911.pt</code></td><td>20,714,763</td><td><code>38853e4fe706ce7623a89502</code></td><td>02 / 05B / 06 / 07 全部实测用它</td></tr><tr><td>handbook_reference</td><td><code>DPA4-Air-OMat24-v20260805.pt</code></td><td>20,713,035</td><td><code>7ac5fb696fc057229ceebc33</code></td><td>手册原版，用于追溯与对照</td></tr></tbody></table></div>
+
+<div class="note w"><b>换版本必须先量差异，再决定是否重跑。</b>本算例实测（同一 9 帧、同 dtype）：两版最大 |ΔE| <b>3.6 meV/cell</b>、最大 |ΔF| <b>5.8 meV/Å</b> —— 都在 SCF 阈值引起的噪声量级之上、但在 0.05 eV/Å 验收线的 1/8 以内，因此<b>不需要重做 04 的 DFT 标签</b>，只需在 manifest 里换 provenance。如果差异接近或超过验收线，就必须整条链重跑。</div>
+
+<div class="tablewrap"><table class="grid kv"><caption>两版共有的标记（逐项核对，任何一项不符先停）</caption><tbody><tr><th scope="row">格式</th><td>PyTorch ZIP checkpoint（torch DoubleStorage / FloatStorage）</td></tr><tr><th scope="row">模型标记</th><td>model type <code>dpa4</code> · version 3 · byteorder little</td></tr><tr><th scope="row">特征开关</th><td>pickle 内含 <code>add_chg_spin_ebd</code> / <code>default_chg_spin</code>，支持电荷-自旋嵌入</td></tr><tr><th scope="row">训练配方（v20260911.<code>json</code>）</th><td>preset <code>dpa4-air</code> · lr cosine 2.5e-4→1e-6 · loss ener/mae · optimizer HybridMuon · seed 42 · stat_file <code>OMat24_Full.hdf5</code></td></tr></tbody></table></div>
+
+<h2>type_map：元素索引的唯一权威</h2>
+<div class="block"><h4>规则</h4><ul><li>索引来源是 <code>model.type_map.index(elem)</code>，<b>不是原子序数 Z−1，也不是元素周期表顺序</b>。</li><li>本 checkpoint 的 type_map 共 <b>118 个元素</b>（H … Og），<b>Li = 2</b>、<b>F = 8</b>。</li><li><code>.pt</code> 内 <code>data.pkl</code> 的字符串表<b>可能被截断</b>（本算例实测截断到 103 项），权威值要从 <code>_extra_state["model_params"]["type_map"]</code> 或 <code>DeepPot(...).get_type_map()</code> 取。</li><li>把 <code>[0, 1]</code> 之类的自造索引喂进去，程序不会报错，只会给出<b>错的力</b> —— 这是本算例最隐蔽的坑。</li></ul></div>
+
+<div class="note">自检口径：用 Li→2 与 F→8 两套索引各算一遍同一帧，总能量差 &lt; 1e-6 eV 才算映射无误（本算例实测 ΔE = 9.5e-7 eV）。</div>
+
+<h2>结构实测台账（01 步逐项核对这些值）</h2>
+<div class="tablewrap"><table class="grid"><caption>12 原子 Σ3 (111) 双界面模型 · 全部可动（fixed = 0）</caption><thead><tr><th>量</th><th>实测值</th><th>怎么来的</th></tr></thead><tbody><tr><td>晶胞体积 V</td><td><b>102.133 Å³</b></td><td>a₁ × (a₂ × a₃)</td></tr><tr><td>Li 平面 z</td><td>0, 2.3576, 4.7151, <b>7.0727</b>, 9.4303, 11.7878 Å</td><td>按元素分组排序</td></tr><tr><td>F 平面 z</td><td>1.1788, 3.5364, 5.8939, 8.2515, 10.6091, 12.9666 Å</td><td>同上</td></tr><tr><td>界面位置</td><td><b>z = 0 与 z = 7.0727 Å</b>（周期双界面）</td><td>Li/F 亚层交替处的错配面</td></tr><tr><td>最短 Li–F</td><td><b>2.0417 Å</b></td><td>全对距离最小值；&lt; 1.6 Å 视为异常短接触</td></tr><tr><td>界面区判定</td><td>界面两侧各约 2 Å 内的原子</td><td>03 步的界面/体相二分类</td></tr><tr><td>能量等价性</td><td>tilt 与 twist 两种写法在 frac shift [0,0,0.5] 处 RMSD <b>0.000000 Å</b></td><td>structure_equivalence.json</td></tr></tbody></table></div>
+
+<div class="note w"><b>进场先改一行。</b>原始目录的 <code>STRU</code> 里 <code>NUMERICAL_ORBITAL</code> 写的是 <code>F_gga_8au_100Ry_4s2p2d1f.orb</code>，而目录里实际只有 <code>F_gga_8au_150.0Ry_2s2p1d.orb</code>。不改这一行，ABACUS 连单点都跑不起来 —— 这类“文件引用错”正是 00 步存在的唯一理由。</div>
+
+<h2>为什么这个元胞不需要冻结层</h2>
+<p>12 个原子全部保持 <code>move = 1 1 1</code>。理由有三条：</p>
+<ul><li>z 方向周期，两个界面首尾相接，<b>没有真空也没有自由表面</b>，没有需要锚住的体相层。</li><li>全弛豫代价只有十几秒，冻结换来的机时节省没有意义。</li><li>冻结 4 个原子等于删掉 1/3 自由度，可能把界面核心该弛豫的部分锁死，再把人为应变算进结果。</li></ul>
+<div class="note">冻结的正当用途是<b>大体系省自由度</b>与<b>真空 slab 的体相锚定</b>。一旦真的加了约束，ABACUS 的 Largest gradient in force 只统计可动原子，判据就必须分栏报告 —— 详见口径备忘。</div>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../index.html"><span class="pk">上一页</span><span class="pt">首页 · 全貌</span></a>
+      <a class="pager-next" href="../pages/protocol.html"><span class="pk">下一页</span><span class="pt">四条口径</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

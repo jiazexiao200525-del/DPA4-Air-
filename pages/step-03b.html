@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>主动学习采样 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="主动学习采样 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="step-03b">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html" class="on"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>执行</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">主动学习采样</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">STEP 03B · ACTIVE LEARNING</p>
+      <h1>主动学习采样</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">03 是“从一条已知轨迹里挑帧”，03B 是“用模型自己的分歧决定下一帧该算哪里”。首轮没有分会可用，第二轮起由这一步接管选帧。</p>
+
+<h2>0. 这一步在流程里的位置</h2>
+<div class="block"><h4>上游是谁 / 下游是谁</h4><ul><li><b>前置条件一</b>：05B 已产出一个<b>通过采纳门</b>的模型。没有模型就没有分会，σ 无从谈起。</li><li><b>前置条件二</b>：06 已训练好 3 成员分会并算出逐帧 σ。<b>分会是 06 的产物，03B 只是消费者</b> —— 本步不重复训练，只审查分会是否合法（见第 2 节）。</li><li><b>下游固定是 04</b>：产出的 <code>selection_manifest.json</code> 与 03 步格式相同，04 步不需要区分帧是从哪一步来的，但轮次必须写进 manifest。</li><li><b>出口只有一个</b>：循环靠 03B 的停止条件跳出，跳出后进 07。<b>σ 不能代替 DFT 下结论</b>。</li></ul></div>
+
+<div class="codewrap"><button class="copy" type="button">复制</button><pre><code>首轮（round 0，事件驱动）
+  00 → 01 → 02a → 03 → 04 → 05 → 05B → 06
+                                        └─ 06 训练 3 成员分会，算出逐帧 σ（σ 是 06 的输出）
+
+第二轮起（round ≥ 1，分会驱动）—— 03B 就在这个位置
+  ① 03B    按 σ × 多样性选出 6–10 帧
+  ② 04     打标签（SCF 单点，不做离子步）
+  ③ 05     合并进数据集，重新划分训练/验证（防相邻帧泄漏）
+  ④ 05B'   用合并后的数据重训 3 个种子（谁过采纳门谁当生产模型）
+  ⑤ 06     重算 σ，重新分低 / 中 / 高
+  ⑥ 回到 ①，除非停止条件已满足
+
+停止条件满足后（唯一的出口）
+  07 DFT 受力验收 → 08 γ_GB</code></pre></div>
+
+<div class="note">为什么首轮不能进 03B：只有一个模型时不存在“模型间分歧”，硬做就是把同一份权重复制三份，σ 恒为 0，会得出“模型很自信”的假结论。<b>首轮用事件驱动（03）不是退让，而是没有分会时唯一诚实的做法。</b></div>
+
+<div class="block"><h4>什么时候提前触发 03B（不必等一整轮跑完）</h4><ul><li>06 里出现<b>中段分歧</b>的帧 —— 那是信息量最大的位置，直接送 04 打标签。</li><li>07 验收未过，且残余力集中在界面原子 —— 需要界面的新覆盖，不是继续磨应变。</li><li>要把模型用到训练集之外：新温度、新应变、点缺陷、更大晶胞。</li></ul></div>
+
+<h2>1. 候选池：这一步的燃料</h2>
+<p>分会只能从你交给它的池子里挑。<b>池子不够大，分会再准也只能在原有几帧里打转</b> ——
+首轮最大的局限就在这里：只有一条短轨迹的 9 帧，模型分歧必然很小，所以首轮用事件驱动（03）：那不是退让，而是没有分会时唯一诚实的做法。</p>
+
+<div class="tablewrap"><table class="grid"><caption>候选池规格（12 原子体系，每轮 ≥ 500 帧）</caption><thead><tr><th>来源</th><th>参数</th><th>每轮目标</th><th>注意</th></tr></thead><tbody><tr><td>NVT 分子动力学</td><td>300 / 600 / 900 / 1200 K，dt 1 fs，各 5–10 ps，每 25 步存 1 帧</td><td>≥ 400 帧</td><td>高温帧只用于采样覆盖，<b>不做 07 的验收候选</b></td></tr><tr><td>弛豫轨迹</td><td>BFGS，fmax 0.02，每步存帧</td><td>50–100 帧</td><td>覆盖大力区到极小点全过程</td></tr><tr><td>多起点 + 应变</td><td>z 向 ±1%、xy 剪切 0.5%，各 3 个 0.03–0.10 Å 随机位移起点</td><td>≥ 60 帧</td><td>与首轮扰动口径一致，便于横向比较</td></tr></tbody></table></div>
+
+<div class="note">每帧必须带 <code>cell</code> / <code>coord</code> / <code>species</code>，存 <code>extxyz</code>。不要存 ASE 的 <code>.traj</code>：它跨版本、跨环境都不可读，而这些帧要跨作业、跨周次被反复复用。</div>
+
+<h2>2. 分会审查：只验合法性，不重复训练</h2>
+<p>分会由 <a href="step-06.html">06 步</a>训练（那也是它“再优化与多候选”的一部分）。
+本节不重复这件事，只规定<b>什么样的分会才能拿来打分</b>。以下四条只要一条不满足，本轮 σ 全部作废：</p>
+<div class="block"><h4>合法性检查（逐条打勾）</h4><ul><li>3 个 LoRA 模型，<b>只有 <code>training.seed</code> 不同</b>（例如 17 / 42 / 2026），其余全部相同。</li><li>base checkpoint 相同、数据划分相同、超参相同、LoRA 的 rank 与 alpha 相同。</li><li>每个成员都过了 05B 的采纳门（留出误差确有改善）—— 分会里混进一个坏模型，σ 立刻失去含义。</li><li>逐成员的 <code>seed</code> / <code>rank</code> / <code>alpha</code> / checkpoint SHA-256 已记录在 <code>committee/</code> 下。</li></ul></div>
+
+<div class="verdict"><div class="vbox ok"><h5>合法做法</h5>3 个成员 = 同数据、同超参、<b>不同训练随机种子</b>。</div><div class="vbox no"><h5>三种“假分会”</h5>① 同一个 checkpoint 复制三份（σ 恒为 0，会得出“模型很自信”的假结论）；② 只改几何起点跑的 3 条弛豫（那是多起点优化，测的是几何敏感性，<b>不是</b>模型分歧）；③ 用不同数据子集却不记录划分（σ 里混进了数据差异，无法归因）。</div></div>
+
+<div class="note">成本口径：3 × 400 步 LoRA 在单卡 4090 上约 ¥1.5，是本步的主要开销；推理打分反而是零头 —— 12 原子约 0.03 s/帧，3 个模型 × 500 帧约 1 分钟。这笔训练费和 05B 是同一笔：05B 需要至少一个种子，练三个就等于顺手把分会做好了。</div>
+
+<h2>3. 打分：逐帧不确定度</h2>
+<div class="block"><h4>指标</h4><ul><li>逐原子力标准差：σ<sub>i</sub> = 三个模型对<b>同一个原子</b>的力逐分量求标准差，再取范数。</li><li>帧级：<code>sigma_max = max_i σ_i</code>、<code>sigma_mean = mean_i σ_i</code>。</li><li>能量标准差：<code>sigma_E = std(E)</code> —— <b>必须先对齐能量零点</b>（见 05B 的坑 5），否则 σ<sub>E</sub> 会被那个 −5028 eV 的常数淹没。</li><li>力向量夹角：同向偏差是<b>系统偏差</b>，反向抖动才是真不确定；夹角 &gt; 60° 的行单独打 flag。</li></ul></div>
+
+<div class="block"><h4>打分脚本（骨架，模型列表换成自己的 3 个成员）</h4><div class="codewrap"><button class="copy" type="button">复制</button><pre><code>import itertools, numpy as np
+from deepmd.infer import DeepPot
+
+MODELS = ["committee/m1.pt", "committee/m2.pt", "committee/m3.pt"]
+pots = [DeepPot(m) for m in MODELS]
+tmap = pots[0].get_type_map()          # 三个成员必须同一张 type_map
+
+for frame in frames:                   # 每帧: coords(n,3), cell(3,3), species
+    idx = np.array([[tmap.index(s) for s in frame.species]])
+    F = []
+    for p in pots:
+        out = p.eval(frame.coords[None], frame.cell.reshape(1, 9), idx, atomic=True)
+        F.append(np.array(out[1]).reshape(-1, 3))
+    F = np.array(F)                    # (3, natoms, 3)
+    sigma_i = np.linalg.norm(F.std(axis=0), axis=1)   # 逐原子
+    row = dict(frame_id=frame.id,
+               sigma_max=float(sigma_i.max()),
+               sigma_mean=float(sigma_i.mean()),
+               sigma_E=float(np.std([p.eval(..., atomic=False)[0][0][0] for p in pots])))
+    rows.append(row)</code></pre></div></div>
+
+<h2>4. 分区阈值：低 / 中 / 高到底是多少</h2>
+<div class="tablewrap"><table class="grid"><caption>分会力标准差的分区（12 原子 LiF Σ3 口径）</caption><thead><tr><th>区间</th><th>σ_max (eV/Å)</th><th>含义</th><th>动作</th></tr></thead><tbody><tr><td>低</td><td>&lt; 0.01</td><td>模型一致，这一带已学会</td><td>丢弃，不再送 DFT</td></tr><tr><td>中</td><td>0.01 – 0.05</td><td>模型分歧，有信息量</td><td><b>送 04 打标签</b></td></tr><tr><td>高</td><td>&gt; 0.05</td><td>模型崩溃或物理异常</td><td>先诊断（重叠 / 爆炸 / 外推过远），不盲目标注</td></tr></tbody></table></div>
+
+<p>这两个数字不是拍的：</p>
+<div class="block"><h4>阈值依据</h4><ul><li><b>0.01 eV/Å</b> 约为本体系实测 ML-vs-DFT 力 MAE（0.002–0.009 eV/Å）的 1–5 倍 —— 低于它的分歧已经淹没在模型自身误差里，再算一帧也学不到东西。</li><li><b>0.05 eV/Å</b> 就是 07 的验收线本身 —— 分歧超过验收线的帧，模型自己都分不清该往哪走，标它之前应先排除几何异常。</li><li>阈值随体系变：原子数上去、元素变多之后，用同一套流程的标定步（C）重新量一遍误差地板，再按同样的倍数取值。</li></ul></div>
+
+<h2>5. 选帧：不确定度 × 多样性</h2>
+<p>只按 σ 排序会选出一堆几乎相同的帧（同一个盆地里反复抖）。必须叠加多样性约束：</p>
+
+<div class="block"><h4>选择规则（确定性，可复现）</h4><ul><li>① 过滤：只保留<b>中段</b>帧。低段丢弃，高段先诊断。</li><li>② 排序：按 <code>sigma_max</code> 降序取前 3k 帧（k = 本轮配额，6–10）。</li><li>③ 贪心去重：score = sigma_max × exp(−d_min / 0.5)，其中 d_min 是该帧到已选帧的最小 RMSD（Å）；每选一帧更新一次。RMSD &lt; 0.05 Å 的两帧合并，只留 σ 大的那帧。</li><li>④ 强制配额：1–2 帧取 <b>σ_max 最高</b>（不看多样性，专挑最可能暴露偏差的）；1 帧取 <b>d_min 最大</b>（离已有训练集最远，防止整轮停在同一个盆地）。</li><li>⑤ 分箱约束：界面帧占比 ≥ 50%，温度与应变分箱各至少 1 帧。任一约束不满足就回退一格重选。</li></ul></div>
+
+<div class="note">第 ④ 条是这套流程与“按能量最低挑一个”的根本区别。按 ML 能量挑，你只会反复验证模型已经相信的那条路径；按分歧挑，才是在问模型“你哪里最不确定”。</div>
+
+<h2>6. 闭环、记录与停止</h2>
+<p>一轮主动学习的完整路径是 <b>03B → 04 → 05 → 05B → 06 → 07</b>，然后回到 03B 打分新的候选池。
+每轮固定产出这些文件，轮次可追溯才叫闭环：</p>
+
+<div class="tablewrap"><table class="grid"><caption>每轮产物</caption><thead><tr><th>文件</th><th>内容</th><th>用途</th></tr></thead><tbody><tr><td><code>al_round01/pool.extxyz</code></td><td>本轮候选池全部帧</td><td>复现同一轮的选择</td></tr><tr><td><code>al_round01/committee/m*/</code></td><td>3 个成员的 checkpoint 与训练配置</td><td>分会审计</td></tr><tr><td><code>al_round01/uncertainty.csv</code></td><td>每帧 σ_max / σ_mean / σ_E / T / 应变 / 分箱</td><td>挑帧依据</td></tr><tr><td><code>al_round01/selected.json</code></td><td>入选帧 + 每帧一行理由 + 被丢弃帧的原因</td><td>进 04 的清单</td></tr><tr><td><code>al_rounds.csv</code></td><td>逐轮：池大小 / 中段帧数 / 送 DFT 帧数 / DFT 花费 / 留出力 MAE / 07 是否通过</td><td>整条闭环的主线记录</td></tr></tbody></table></div>
+
+<div class="block"><h4>停止条件（满足任一即收敛，不要无限循环）</h4><ul><li>连续两轮选出的 top-k 帧 <code>sigma_max</code> 全部 &lt; 0.01 eV/Å —— 模型在池子里已经一致。</li><li>中段帧数 &lt; 3 —— 池子里没有值得问的地方了，先扩池再说。</li><li>07 验收通过 —— 目标已达成，继续加标签只是浪费。</li><li>留出力 MAE 连续两轮不再下降（平台期）—— 说明瓶颈是标签多样性或构型来源，不是数量。</li></ul></div>
+
+<div class="tablewrap"><table class="grid"><caption>单轮预算（12 原子体系；4–6 轮典型收敛）</caption><thead><tr><th>项目</th><th>每轮量</th><th>单价 / 时长</th><th>小计</th></tr></thead><tbody><tr><td>候选池采样（ML）</td><td>≥ 500 帧</td><td>4090 ¥5.5/h，约 2 min</td><td>≈ ¥0.2</td></tr><tr><td>分会训练</td><td>3 × 400 步 LoRA</td><td>4090，每成员约 5 min</td><td>≈ ¥1.5</td></tr><tr><td>新增 DFT 标签</td><td>6–10 帧</td><td>c32_m64_cpu ¥2.56/h，约 15 s/帧</td><td>≈ ¥0.15</td></tr><tr><td>06 再优化 + 07 验收</td><td>3 seed + 2–4 帧 SCF</td><td>ML + DFT 各一次</td><td>≈ ¥0.3</td></tr><tr><td><b>每轮合计</b></td><td></td><td></td><td><b>≈ ¥2.2</b></td></tr></tbody></table></div>
+
+<h2>7. 与 03、06 的分工</h2>
+<div class="tablewrap"><table class="grid"><caption>两步不要混用</caption><thead><tr><th></th><th>03（首轮 / 事件驱动）</th><th>03B（第二轮起 / 分会驱动）</th></tr></thead><tbody><tr><td>判据</td><td>几何事件：位移、配位、能量/力突变</td><td>模型间力标准差 σ<sub>F</sub></td></tr><tr><td>候选池</td><td>一条短轨迹的 9–20 帧</td><td>MD 多温多应变 ≥ 500 帧</td></tr><tr><td>谁决定</td><td>人按配额表挑</td><td>分会分数 + 多样性约束，人只审配额</td></tr><tr><td>为什么这样分工</td><td>首轮只有 1 个模型，没有 σ 可用</td><td>已有可采纳的模型，σ 才开始有意义</td></tr></tbody></table></div>
+
+<div class="verdict"><div class="vbox ok"><h5>进 04 的条件</h5>入选帧都有 <code>sigma_max</code>、分箱归属、一行可读理由三项；且配额与分箱约束都满足。</div><div class="vbox no"><h5>不许进 04 的情况</h5>① 用同一 checkpoint 复制的“分会”；② 只按 ML 能量最低挑的帧；③ σ_max &gt; 0.05 却未做几何诊断的帧；④ 与已标注帧 RMSD &lt; 0.05 Å 的重复帧。</div></div>
+
+<div class="note">低分歧<b>不等于</b>准确：三个模型可能共享同一套训练偏差一起错。所以 σ 只能用来决定“算哪一帧”，永远不能替代 07 的 DFT 验收。</div>
+
+<p class="out"><b>产出</b>al_round01/pool.extxyz · al_round01/uncertainty.csv · al_round01/selected.json · al_round01/committee/ · al_rounds.csv</p>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../pages/step-03.html"><span class="pk">上一页</span><span class="pt">选出 DFT 候选帧</span></a>
+      <a class="pager-next" href="../pages/step-04.html"><span class="pk">下一页</span><span class="pt">DFT 单点标签</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

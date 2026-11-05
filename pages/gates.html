@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>决策门 · LiF Σ3 (111) 晶界 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="决策门 · LiF Σ3 (111) 晶界 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="gates">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html" class="on"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>收束</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">决策门 · LiF Σ3 (111) 晶界</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">DECISION GATES</p>
+      <h1>决策门 · LiF Σ3 (111) 晶界</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">任何一个门不通过，就停在当前阶段。这样可以把失败定位到模型、数据、电子收敛或结构，而不是最后才发现整条链条无法解释。</p>
+<div class="gates"><article class="gate"><h3>模型门</h3><p><span class="pass">通过：</span>checkpoint 可加载、映射正确、单帧力有限、原子顺序与 STRU 一致。</p><p><span class="back">回退：</span>修环境、接口、元素顺序或单位。</p></article><article class="gate"><h3>标签门</h3><p><span class="pass">通过：</span>SCF 收敛、能量/力有限、参数口径一致、原子数与元素顺序逐帧一致。</p><p><span class="back">回退：</span>修 DFT 输入，或把帧移入 failed_frames。</p></article><article class="gate"><h3>结构门</h3><p><span class="pass">通过：</span>最大受力分量 ≤ 0.05 eV/Å（本体系全可动，用全部原子；若设了约束则用可动原子），且无异常短接触。</p><p><span class="back">回退：</span>补标签、再优化，或做少量 DFT 几何细化。</p></article><article class="gate"><h3>协议与精度门</h3><p><span class="pass">通过：</span>色散口径已确认、checkpoint provenance 与 dtype 已查明、SCF 阈值经原子力 MAE/RMSE 标定、能量比较在 float64 下完成。</p><p><span class="back">回退：</span>补做口径核对、查模型信息、重跑阈值标定。</p></article><article class="gate"><h3>分会门</h3><p><span class="pass">通过：</span>已出示：① 3 成员分会台账（仅 training.seed 不同、各过采纳门）；② <code>al_rounds.csv</code> 至少一行；③ 本轮 σ 的低/中/高计数；④ “送 / 不送新标签”的书面理由。</p><p><span class="back">回退：</span>回 05B 重训分会，或回 03B 补打分与选帧决策。</p></article></div>
+
+<h2>为什么是这五道门</h2>
+<div class="tablewrap"><table class="grid"><thead><tr><th>门</th><th>拦住的是哪一类错误</th><th>典型症状</th></tr></thead><tbody><tr><td class="mono">模型门</td><td>工具链错误（接口、映射、单位）</td><td>力全都对但顺序错位、能量数量级不对</td></tr><tr><td class="mono">标签门</td><td>数值错误（未收敛、参数漂移）</td><td>同一个结构两次算不一样</td></tr><tr><td class="mono">结构门</td><td>物理错误（几何不合理）</td><td>受力达标但有 1.2 Å 的 Li–F 接触</td></tr><tr><td class="mono">协议与精度门</td><td>可比性错误（口径不一致）</td><td>两个数都“合理”但不能相减</td></tr><tr><td class="mono">分会门</td><td>过程性错误（没做主动学习判据就下结论）</td><td>「模型挺好，直接验收」但拿不出 σ 与轮次记录</td></tr></tbody></table></div>
+
+<div class="note"><b>顺序有意义。</b>门是从“便宜且基础”排到“昂贵且综合”的：模型门几秒钟就能过，协议门要几分钟，结构门要一帧 DFT，分会门则要求先花 ¥1.5 训出三个种子 —— <b>它是唯一一道“主动花钱”的门</b>，因为“该不该继续加标签”这个问题，只能用分会回答。</div>
+
+<h2>分会门：本版新增的强制环节</h2>
+<p>前三道门管“数字对不对”，第四道管“数字能不能比”，第五道管<b>“你有没有真的做过主动学习判据”</b>。
+它的存在是为了堵住一条捷径：训练一个模型 → 直接进 07 → 偶然通过 → 声称闭环完成。</p>
+
+<div class="verdict"><div class="vbox ok"><h5>通过条件（四项缺一不可）</h5><ul><li><code>committee/</code> 下 3 个成员 checkpoint + 各自 seed / rank / alpha / SHA-256</li><li>每个成员都过了 05B 采纳门（留出误差确有改善）</li><li><code>al_rounds.csv</code> 至少一行：池大小 / 中段帧数 / 送 DFT 帧数 / 花费 / 留出 MAE</li><li><code>selected.json</code> 或等价记录：本轮选了哪几帧、为什么；若一帧不选，写明“无中段帧”的证据</li></ul></div><div class="vbox no"><h5>不通过怎么办</h5>缺成员台账 → 回 05B 重训；缺 σ 分布 → 回 03B；σ 显示确有中段帧却没送标签 → 不允许进 07，先补齐 <code>04 → 05 → 05B</code>。</div></div>
+
+<div class="note w"><b>“必然执行”指的是判据，不是标签。</b>分会门强制的是<b>打分 + 决策 + 留证</b>；如果 σ 显示池子里没有中段帧，那么“本轮不需要新标签”就是正确结论 —— 但这份证据必须留下。反过来，明知有中段帧却跳过 04 直接验收，是最典型的假闭环。</div>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../pages/step-08.html"><span class="pk">上一页</span><span class="pt">晶界能 γ_GB</span></a>
+      <a class="pager-next" href="../pages/deliverables.html"><span class="pk">下一页</span><span class="pt">交付物与边界</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

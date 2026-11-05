@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>四条先钉死的口径 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="四条先钉死的口径 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="protocol">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html" class="on"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>预备</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">四条先钉死的口径</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">PROTOCOL</p>
+      <h1>四条先钉死的口径</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">这四条不改变流程，但决定后面所有数字能不能互相比较。任何一条没定，能量与力的比较结论就不成立。</p>
+<div class="proto"><article class="pcard"><span class="tag">01 · MASK</span><h3>冻结是省机时的手段，不是必需品</h3><p><b>体系大、全弛豫太贵</b>时才冻结底层：减少自由度换机时，同时给真空 slab 一个体相锚点。代价是人为减少自由度，并把冻结层上的人为应变算进结果。</p><p><b>本体系 12 原子、周期双界面、无真空</b>，全弛豫的代价只有几秒，因此 <code>fixed: 0</code>，判据直接用全原子。一旦以后加了约束，就必须记住 ABACUS 的 Largest gradient in force 只统计可动原子。</p></article><article class="pcard"><span class="tag">02 · DTYPE</span><h3>能量比较统一双精度</h3><p>float32 的 machine epsilon 是 1.19e-7。在 ~10² eV 的总能上，最小可分辨步长约 1e-5 eV，而弛豫末段相邻帧的能量差常在 0.1–1 meV/atom 量级 —— 同一数量级，float32 分辨不了。</p><p>候选帧能量排序、误差表、分支能量比较：<b>必须 float64</b>。checkpoint 权重本身的 dtype 决定上限，把推理切成 float64 不能恢复已丢失的精度。文件往返也要查 dtype：<code>.npy</code> 存成 float32、<code>.cif</code> 只写 4–6 位小数、JSON 用 <code>%.6g</code> 写大数，都会毁掉精度。</p></article><article class="pcard"><span class="tag">03 · DISPERSION</span><h3>色散口径一次定死</h3><p>本算例标签用 <code>vdw_method d3_0</code>。DPA4 是局域描述符模型（截断 ~6 Å），长程 1/r⁶ 项在物理上无法被局域模型表示 —— 喂再多标签也学不出来。</p><p>因此：要么 ML 侧外挂同款色散，要么全程只用 DFT 的色散口径做最终判断。<b>不允许</b>把带回 DFT 色散的能量直接和裸 ML 能量比大小。</p></article><article class="pcard"><span class="tag">04 · ENERGY ZERO</span><h3>能量零点先对齐再微调</h3><p>DPA4-Air 的绝对能量与 DFT 的绝对能量差一个<b>体系常数</b>：本算例实测模型约 −57.3 eV、ABACUS 约 −5085.4 eV，差 <b>−5027.9972 eV</b>（9 帧标准差 0.00437 eV）。</p><p>微调的能量项直接吃绝对值，这个常数会把 loss 淹没 —— 实测后果是<b>第一步就发散</b>：验证集能量 RMSE 从 1e-2 跳到 4.19e+02，力误差从 0.009 涨到 1.97 eV/Å。</p><p>规则：微调前把所有标签改写成 <code>E_dft − shift</code>，<b>帧间能量差完全不变</b>。shift 取全部帧的平均偏移量，并记下它的标准差 —— 标准差若超过 0.05 eV，说明帧间差异已不是常数，单一 shift 不成立，先查能量随构型的漂移再谈微调。</p></article></div>
+
+<h2>怎么检查这四条已经定了</h2>
+<div class="tablewrap"><table class="grid"><thead><tr><th>口径</th><th>检查动作</th><th>写进哪里</th></tr></thead><tbody><tr><td class="mono">Mask</td><td>逐原子 <code>move</code> 标志与 manifest 一致；若设了约束，确认判据用的是可动原子</td><td>manifest.json</td></tr><tr><td class="mono">Dtype</td><td><code>dp show</code> 或 pickle 读取确认权重 dtype；<code>.npy</code> 读回查 <code>dtype</code>，不是 float64 就重转</td><td>protocol_check.json</td></tr><tr><td class="mono">色散</td><td>ABACUS 侧 <code>vdw_method</code> 与 ML 侧外挂参数（s6/s8/a1/a2、无三体项）一一对照</td><td>protocol_check.json</td></tr><tr><td class="mono">能量零点</td><td>用 <code>DeepPot</code> 算全部帧的 <code>mean(E_dft − E_ml)</code> 与标准差；标准差 &lt; 0.05 eV 才允许用单一 shift</td><td><code>energy_zero.json</code></td></tr></tbody></table></div>
+<div class="note x"><b>停止条件：</b>色散口径未确认、模型 dtype 未查明、中间文件精度未核对、能量零点未对齐时，任何能量与力的比较结论都不成立。</div>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../pages/spec.html"><span class="pk">上一页</span><span class="pt">算例规格</span></a>
+      <a class="pager-next" href="../pages/calibration.html"><span class="pk">下一页</span><span class="pt">标签精度标定</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

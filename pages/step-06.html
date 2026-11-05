@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>再优化与多候选 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="再优化与多候选 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="step-06">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html" class="on"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>执行</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">再优化与多候选</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">STEP 06</p>
+      <h1>再优化与多候选</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">用不同种子的 LoRA 模型做分会，按力偏差而非单一能量挑候选。</p>
+
+<div class="block"><h4>操作</h4><ul><li>训 3 个 LoRA 模型：<b>只有 <code>training.seed</code> 不同</b>，数据划分、超参、base checkpoint 全同（组法与三种“假分会”见 <a href="step-03b.html">03B 步</a>）。</li><li>对同一帧预测逐原子力，算模型间标准差 σ<sub>F</sub>；这是主动学习的<b>唯一</b>不确定度信号。</li><li>从原始结构与首轮候选终点分别启动第二轮优化，得到新候选。</li><li>把 σ<sub>F</sub> 分档，中段帧交给 03B 的选帧规则（不确定度 × 多样性）挑出送 DFT 的那几帧。</li><li>记录新区域事件，必要时回到 03–05 再采样；轮次写进 <code>al_rounds.csv</code>。</li></ul></div>
+
+<h2>力偏差怎么读</h2>
+<div class="tablewrap"><table class="grid"><caption>分档数值的来历见 03B 的“分区阈值”</caption><thead><tr><th>模型间力标准差</th><th>含义</th><th>动作</th></tr></thead><tbody><tr><td>低　&lt; 0.01 eV/Å</td><td>模型一致，已学会</td><td>丢弃，不再送 DFT</td></tr><tr><td>中　0.01 – 0.05</td><td>模型分歧，有信息量</td><td><b>送 04 步打标签</b>（由 03B 排序挑选）</td></tr><tr><td>高　&gt; 0.05</td><td>模型崩溃或物理异常</td><td>先诊断，不盲目标注</td></tr></tbody></table></div>
+
+<div class="verdict"><div class="vbox ok"><h5>候选选择原则</h5>不能只按 ML 能量最低选一个。优先保留能量、受力、配位、界面距离和异常事件都合理的候选，交给 DFT 单点验收；同时务必保留 <b>1–2 个力分歧最高</b>的候选，它们最能暴露模型偏差。</div><div class="vbox no"><h5>停止条件</h5>模型在新区域明显失效（力分歧普遍偏高 / 几何持续异常）→ 回到 03–05 补标签，不继续盲目优化。</div></div>
+
+<div class="note">低分歧<b>不等于</b>准确。多个模型可能共享同一套训练偏差，一起错。所以分歧只能用来“挑哪些帧去算 DFT”，不能用来“代替 DFT 下结论”。</div>
+
+<h2>出口条件（不满足不得进 07）</h2>
+<div class="block"><h4>06 必须产出这三样，缺一不可</h4><ul><li>3 个成员的 checkpoint 与台账（<code>committee/m*.pt</code> + seed / rank / alpha / SHA-256）。</li><li>池子与候选终点上<b>逐帧</b>的 σ<sub>F</sub>（<code>uncertainty.csv</code>），以及低 / 中 / 高计数。</li><li><code>al_rounds.csv</code> 本轮一行：池大小 / 中段帧数 / 送 DFT 帧数 / 花费 / 留出 MAE。</li></ul></div>
+<div class="note w"><b>06 不产出 σ 分布，就不得进 07</b> —— 这是「分会门」的执行点。注意：出口条件要求的是“做了判据”，不是“必须送出标签”。若中段帧计数为 0，正确结论是“本轮无需新标签”，把证据写进 <code>al_rounds.csv</code> 即可进 07。</div>
+
+<p class="out"><b>产出</b>candidate_comparison.csv · trajectory_round01.extxyz · new_events.csv · uncertainty.csv · committee/ · al_rounds.csv</p>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../pages/step-05b.html"><span class="pk">上一页</span><span class="pt">LoRA 微调与采纳门</span></a>
+      <a class="pager-next" href="../pages/step-07.html"><span class="pk">下一页</span><span class="pt">DFT 受力验收</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

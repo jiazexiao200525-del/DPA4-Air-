@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoRA 微调与采纳门 · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="LoRA 微调与采纳门 —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="step-05b">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html" class="on"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>执行</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">LoRA 微调与采纳门</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">STEP 05B</p>
+      <h1>LoRA 微调与采纳门</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">首轮数据量很小，先只用 LoRA；全参数微调留到标签覆盖足够之后。</p>
+
+<h2>两种机制是正交的</h2>
+<div class="note"><b>主动学习</b>是采样策略（决定去算哪些 DFT）；<b>微调</b>是更新策略（拿到标签怎么改模型）。二者不互斥，标准做法是把微调放进每一轮闭环内部，而不是整个流程外做一次。</div>
+
+<p>首轮只有 4–6 帧标签，LoRA 能让模型适应当前界面的局部配位，同时尽量保留预训练已有的通用化学信息。</p>
+
+<div class="block"><h4>配置与启动（字段需按当前 DeePMD-kit 版本校验）</h4><div class="codewrap"><button class="copy" type="button">复制</button><pre><code>{
+  "model": {
+    "type": "dpa4",
+    "lora": { "rank": 8, "alpha": 16.0 }
+  }
+}</code></pre></div><div class="codewrap"><button class="copy" type="button">复制</button><pre><code>dp --pt train lora_ft.json --finetune DPA4-Air-OMat24-v20260911.pt \
+   --skip-neighbor-stat --force-load</code></pre></div></div>
+
+<h2>本环境实测的 5 个坑（照原文抄会失败）</h2>
+<p>下面每一条都是实际报错换来的。它们不改变方法论，但会让“照着手册做”直接停在报错页。</p>
+<div class="tablewrap"><table class="grid"><caption>deepmd-kit 3.2.1.dev53 + dpmd-ase:320b1-0810 实测</caption><thead><tr><th>#</th><th>现象</th><th>根因</th><th>正确做法</th></tr></thead><tbody><tr><td>1</td><td><code>ArgumentKeyError: undefined key 'learning_rate'</code></td><td>deepmd 3.2.1.dev53 的配置是<b>扁平结构</b></td><td><code>learning_rate</code> / <code>optimizer</code> / <code>loss</code> 与 <code>model</code> <b>同级</b>，不是嵌套在里面</td></tr><tr><td>2</td><td><code>ValueError: Unsupported batch size rule: 1</code></td><td>字符串被当成缩放规则</td><td>固定 batch 必须传 <b>int</b>；只有 <code>auto</code> / <code>auto:N</code> / <code>max:N</code> / <code>filter:N</code> 才是规则</td></tr><tr><td>3</td><td><code>KeyError: 'optimizer'</code>（<code>--init-model</code>）</td><td>推理用的 <code>.pt</code> 里没有优化器状态</td><td>微调必须用 <code>--finetune</code>：它只加载权重、<code>start_step=0</code>、重建优化器</td></tr><tr><td>4</td><td><code>FileNotFoundError: set.000/coord.npy</code></td><td>数据集按 <code>.npy</code> 头读帧数，<code>.raw</code> 只有文本</td><td>同时写 <code>box</code> / <code>coord</code> / <code>force</code> / <code>energy</code> 四个 <code>.npy</code>（energy 形状 <code>(n,1)</code>）</td></tr><tr><td>5</td><td>第 1 步 <code>rmse_e_val = 4.19e+02</code>，力误差 1.97 eV/Å</td><td>能量零点未对齐（见口径 04）</td><td>微调前先算 <code>mean(E_dft − E_ml)</code>（本算例 −5027.9972 eV）并改写标签</td></tr></tbody></table></div>
+
+<div class="note w">另外两条与引擎相关的硬事实：<b>①内置 3.2.0b1 不可用</b>（<code>DescrptSeZM</code> 报 <code>object of type 'int' has no len()</code>，必须装指定的离线 wheel）；<b>②<code>--force-load</code> 与 <code>--skip-neighbor-stat</code> 一起用</b>，否则会在邻域统计阶段因为 <code>stat_file</code> 缺失而退出。</div>
+
+<h2>训练时优先监测</h2>
+<div class="tablewrap"><table class="grid"><caption>留出集 3 帧（首轮 6/3 划分）</caption><thead><tr><th>指标</th><th>为什么分开看</th><th>本算例首轮实测</th></tr></thead><tbody><tr><td>总体能量误差</td><td>只能说明平均好坏</td><td>验证集 RMSE 2.04e-02（对齐零点后）</td></tr><tr><td>总体力 MAE / RMSE</td><td>主要判据</td><td>0.00886 → <b>0.00455</b></td></tr><tr><td>界面区原子力误差</td><td>你最关心的地方最容易不准</td><td>0.00917 → <b>0.00513</b></td></tr><tr><td>体相区原子力误差</td><td>防止只学了界面</td><td>0.00549 → 0.00292</td></tr><tr><td>最大单原子力误差</td><td>暴露局部失效</td><td>0.0573 → <b>0.0421</b> eV/Å</td></tr><tr><td>训练 / 验证误差差距</td><td>&gt;3 倍视为过拟合信号</td><td>1.04e-3 vs 4.55e-3 → <b>4.4 倍，已过线</b></td></tr></tbody></table></div>
+
+<div class="verdict"><div class="vbox ok"><h5>采纳门（带量级）</h5>只有独立验证集误差<b>明显</b>改善才采纳新模型，否则回退上一轮。每轮 checkpoint 永久保留，可复现、可回退。本算例的判读量级：力 MAE 从 8.9e-3 降到 4.5e-3 才算真改善（−49%）；<b>1e-3 量级的抖动不算改善</b>，那只是随机种子差异。</div><div class="vbox no"><h5>停止条件（带量级）</h5>新增帧对验证集无改善（改善 &lt; 10%）→ 标签没提供新信息。转去改采样策略（换温度、应变、起点、局部扰动），不要继续烧 DFT。</div></div>
+
+<div class="note"><b>验证集只有 3 帧，这是本算例的误差棒。</b>3 帧的统计意义很弱，一帧异常就能翻转结论 —— 所以这里的“改善”只能当趋势看，最终裁决必须靠 07 的 DFT 验收。要把采纳门做成可信判据，验证帧至少要 8–10 帧。</div>
+
+<h2>每轮从哪里起步</h2>
+<div class="tablewrap"><table class="grid"><thead><tr><th>变体</th><th>做法</th><th>风险</th><th>建议</th></tr></thead><tbody><tr><td class="mono">A</td><td>每轮从原始 checkpoint 重新微调，训练集用累计标签</td><td>成本随轮数线性增长，但很小</td><td><b>默认</b></td></tr><tr><td class="mono">B</td><td>从上一轮 checkpoint 续训（warm start）</td><td>灾难性遗忘 + 误差累积</td><td>必须配 replay buffer 30–50% 与采纳门</td></tr><tr><td class="mono">C</td><td>从随机权重从头训练</td><td>丢弃预训练先验，样本量差 2–3 个数量级</td><td><b>禁用</b></td></tr></tbody></table></div>
+
+<p class="out"><b>产出</b>finetune_manifest.json · adoption_gate.json · checkpoint_roundNN.pt</p>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../pages/step-05.html"><span class="pk">上一页</span><span class="pt">数据集划分</span></a>
+      <a class="pager-next" href="../pages/step-06.html"><span class="pk">下一页</span><span class="pt">再优化与多候选</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

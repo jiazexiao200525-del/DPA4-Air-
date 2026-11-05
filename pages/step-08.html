@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>晶界能 γ_GB · DPA4-Air 闭环执行手册</title>
+<meta name="description" content="晶界能 γ_GB —— DPA4-Air × LiF Σ3 晶界机器学习势闭环执行手册。">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body data-page="step-08">
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar">
+  <button class="navtog" type="button" id="navtog" aria-label="打开导航" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="brand-txt">闭环执行手册<span class="brand-sub">DPA4-Air / LiF</span></span>
+  </a>
+  <span class="topbar-meta">00 – 08 + 03B · 5 个门 · 12 原子</span>
+</header>
+
+<div class="shell">
+  <aside class="side" id="side">
+    <div class="side-inner">
+      <p class="nav-cap">概览</p><nav class="nav-group"><a href="../index.html"><span class="n">·</span>首页 · 全貌</a></nav><p class="nav-cap">预备</p><nav class="nav-group"><a href="../pages/spec.html"><span class="n">00</span>算例规格</a><a href="../pages/protocol.html"><span class="n">P</span>四条口径</a><a href="../pages/calibration.html"><span class="n">C</span>标签精度标定</a></nav><p class="nav-cap">执行</p><nav class="nav-group"><a href="../pages/step-00.html"><span class="n">00</span>建立运行目录</a><a href="../pages/step-01.html"><span class="n">01</span>DPA4-Air 单帧预检</a><a href="../pages/step-02.html"><span class="n">02</span>受控 ML 预优化</a><a href="../pages/step-03.html"><span class="n">03</span>选出 DFT 候选帧</a><a href="../pages/step-03b.html"><span class="n">03B</span>主动学习采样</a><a href="../pages/step-04.html"><span class="n">04</span>DFT 单点标签</a><a href="../pages/step-05.html"><span class="n">05</span>数据集划分</a><a href="../pages/step-05b.html"><span class="n">05B</span>LoRA 微调与采纳门</a><a href="../pages/step-06.html"><span class="n">06</span>再优化与多候选</a><a href="../pages/step-07.html"><span class="n">07</span>DFT 受力验收</a><a href="../pages/step-08.html" class="on"><span class="n">08</span>晶界能 γ_GB</a></nav><p class="nav-cap">收束</p><nav class="nav-group"><a href="../pages/gates.html"><span class="n">G</span>决策门</a><a href="../pages/deliverables.html"><span class="n">D</span>交付物与边界</a><a href="../pages/checklist.html"><span class="n">✓</span>执行清单</a><a href="../pages/glossary.html"><span class="n">?</span>口径备忘</a></nav>
+      <div class="side-foot">
+        <div class="side-prog"><span>清单进度</span><b id="sideProg">0 / 20</b></div>
+        <p>DPA4-Air-OMat24-v20260805<br>LiF Σ3 (111) · 12 原子</p>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main id="main">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="../index.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span>执行</span>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-here">晶界能 γ_GB</span>
+    </nav>
+
+
+    <header class="page-hd">
+      <p class="kicker">STEP 08</p>
+      <h1>晶界能 γ_GB</h1>
+    </header>
+
+
+    <div class="prose">
+
+<p class="lede">只对验收结构计算性质。参考态必须与界面同口径，否则数字看着正常但错一个量级。</p>
+
+<div class="block"><h4>公式与代入</h4><div class="codewrap"><button class="copy" type="button">复制</button><pre><code>γ_GB = (E_GB - N * E_bulk/atom) / (2A)
+
+E_GB        07 步验收结构的总能（同一 DFT 口径）
+E_bulk/atom LiF 岩盐相单点总能 / 原子数
+N           12
+A           7.2202 A^2      -> 2A = 14.4404 A^2
+分母 2      周期晶界模型有两个界面</code></pre></div></div>
+
+<div class="verdict"><div class="vbox ok"><h5>判据</h5><ul><li>E_GB 与 E_bulk 用完全相同的 ecutwfc / scf_thr / 赝势 / 轨道 / kspacing</li><li>两者都 SCF 真收敛</li><li>报告 γ_GB 时同时给出 E_GB、E_bulk、N、A 四个原始量</li></ul></div><div class="vbox no"><h5>报告边界</h5>可以写「该晶界在当前 DFT 口径下的晶界能为 X J/m²」；不能仅凭一个静态 γ_GB 推出迁移率、离子电导或力学强度。</div></div>
+
+<div class="note w"><b>这个数暂时不能写进结论。</b>元胞 a₃ = 14.145 Å、双界面，两个界面只隔 ≈7.07 Å，晶粒半区仅 ~3.5 Å 厚 —— 两个界面在强耦合。算出的 γ_GB 会被这种相互作用污染。要做这个数，得用 144 原子或 232 原子的大元胞，并做界面间距收敛。12 原子这一步的价值是<b>把公式和参考态走通</b>，不是取值。</div>
+
+<h2>检查清单</h2>
+<div class="tablewrap"><table class="grid"><thead><tr><th>项</th><th>合格判据</th></tr></thead><tbody><tr><td>分母</td><td>确认 2（双界面），不是 1</td></tr><tr><td>参考 bulk</td><td>同泛函、同截断、同 k 点、同赝势轨道，且已收敛</td></tr><tr><td>面积 A</td><td>面内两晶格矢叉积模，7.2202 Å²</td></tr><tr><td>原子数 N</td><td>12，与 E_GB 对应</td></tr><tr><td>单位</td><td>eV/Å² → J/m²，换算系数 16.0218</td></tr></tbody></table></div>
+
+<p class="out"><b>产出</b>gamma_GB.json · bulk_reference.json · property_summary.md</p>
+
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a class="pager-prev" href="../pages/step-07.html"><span class="pk">上一页</span><span class="pt">DFT 受力验收</span></a>
+      <a class="pager-next" href="../pages/gates.html"><span class="pk">下一页</span><span class="pt">决策门</span></a>
+    </nav>
+
+    <footer class="page-foot">
+      <span>DPA4-Air × LiF Σ3 (111) 晶界</span>
+      <span>执行模板 · 不代表推理、微调或 DFT 验收已完成</span>
+    </footer>
+  </main>
+</div>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
